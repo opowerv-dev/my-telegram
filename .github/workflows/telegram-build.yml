@@ -39,7 +39,7 @@ jobs:
       - name: Build
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew :TMessagesProj_AppStandalone:assembleStandalone --no-daemon
 
       - name: APK
         uses: actions/upload-artifact@v4

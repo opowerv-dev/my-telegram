@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
+add_library(cpufeatures STATIC "${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c")
+target_include_directories(cpufeatures PUBLIC "${ANDROID_NDK}/sources/android/cpufeatures")
 
 set(CMAKE_CXX_FLAGS "-std=c++14 -DANDROID -g")
 set(CMAKE_C_FLAGS "-w -std=c11 -DANDROID -D_LARGEFILE_SOURCE=1 -g -Wno-error=implicit-function-declaration")
@@ -248,5 +250,3 @@ target_link_libraries(${NATIVE_LIB}
 #            c)
 #endif()
 
-include(AndroidNdkModules)
-android_ndk_import_module_cpufeatures()

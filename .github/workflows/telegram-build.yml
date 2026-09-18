@@ -32,7 +32,7 @@ jobs:
       - name: SDK
         run: |
           export ANDROID_HOME=/usr/local/lib/android/sdk
-          export PATH="$ANDROID_HOME/cmdline-tools/16.0/bin:$ANDROID_HOME/platform-tools:$PATH"
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
           yes | sdkmanager --licenses || true
           sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018"
 

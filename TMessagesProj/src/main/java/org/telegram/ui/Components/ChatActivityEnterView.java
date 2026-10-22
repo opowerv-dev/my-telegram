@@ -1,4 +1,3 @@
-import android.widget.Button;
 /*
  * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
@@ -8,6 +7,8 @@ import android.widget.Button;
  */
 
 package org.telegram.ui.Components;
+
+import android.widget.Button;
 
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.dpf2;

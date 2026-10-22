@@ -94,6 +94,17 @@ import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.lookgram.LookgramStarsActivity;
+import org.telegram.ui.lookgram.LookgramLoginActivity;
+import org.telegram.ui.lookgram.LookgramProfileActivity;
+import org.telegram.ui.lookgram.LookgramEditProfileActivity;
+import org.telegram.ui.lookgram.LookgramAdminActivity;
+import org.telegram.ui.lookgram.LookgramPremiumStickersActivity;
+import org.telegram.ui.lookgram.LookgramStickersActivity;
+import org.telegram.ui.lookgram.LookgramAdminStickersActivity;
+import org.telegram.ui.lookgram.LookgramCreateCommunityActivity;
+import org.telegram.ui.lookgram.LookgramCommunitiesActivity;
+import org.telegram.ui.lookgram.LookgramCommunitySearchActivity;
 import org.telegram.ui.ActionBar.INavigationLayout;
 import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
@@ -205,6 +216,43 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             iBlur3SourceGlassFrosted = null;
             iBlur3SourceGlass = null;
         }
+    }
+
+    private void openLookgramIfActive(Runnable action) {
+        long telegramId = AccountInstance.getInstance(currentAccount)
+                .getUserConfig().clientUserId;
+
+        org.telegram.messenger.lookgram.LookgramAccountStatus.checkAsync(
+                telegramId,
+                new org.telegram.messenger.lookgram.LookgramAccountStatus.Callback() {
+                    @Override
+                    public void onActive() {
+                        AndroidUtilities.runOnUIThread(action);
+                    }
+
+                    @Override
+                    public void onFrozen(long until, boolean permanent) {
+                        AndroidUtilities.runOnUIThread(() ->
+                                BulletinFactory.of(SettingsActivity.this)
+                                        .createSimpleBulletin(
+                                                R.raw.chats_infotip,
+                                                "❄ Аккаунт Lookgram заморожен"
+                                        ).show()
+                        );
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        AndroidUtilities.runOnUIThread(() ->
+                                BulletinFactory.of(SettingsActivity.this)
+                                        .createSimpleBulletin(
+                                                R.raw.chats_infotip,
+                                                "Не удалось проверить аккаунт Lookgram"
+                                        ).show()
+                        );
+                    }
+                }
+        );
     }
 
     @Override
@@ -707,6 +755,19 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             StarsController c = StarsController.getInstance(currentAccount);
             long balance = c.getBalance().amount;
             items.add(SettingCell.Factory.of(12, 0xFFEFA612, 0xFFE77512, R.drawable.settings_stars, getString(R.string.TelegramStars), null, c.balanceAvailable() && balance > 0 ? StarsIntroActivity.formatStarsAmount(c.getBalance(), 0.85f, ' ') : ""));
+            items.add(SettingCell.Factory.of(52, 0xFF4A90E2, 0xFF357ABD, R.drawable.settings_account, "Edit Lookgram Profile", null, ""));
+            if (org.telegram.messenger.AccountInstance.getInstance(currentAccount).getUserConfig().clientUserId == 8043596187L) {
+                items.add(SettingCell.Factory.of(53, 0xFF9C27B0, 0xFF6A1B9A, R.drawable.settings_account, "Lookgram Admin", null, ""));
+                    items.add(SettingCell.Factory.of(56, 0xFF8E44AD, 0xFF6C3483, R.drawable.settings_account, "Управление стикерами", null, ""));
+            }
+            items.add(SettingCell.Factory.of(60, 0xFFE84A5F, 0xFFC92D45, R.drawable.settings_account, "Вход в Lookgram", null, ""));
+            items.add(SettingCell.Factory.of(51, 0xFF4A90E2, 0xFF357ABD, R.drawable.settings_account, "Lookgram Profile", null, ""));
+            items.add(SettingCell.Factory.of(50, 0xFFEFA612, 0xFFE77512, R.drawable.settings_stars, "Lookgram Stars", null, ""));
+            items.add(SettingCell.Factory.of(55, 0xFF4A90E2, 0xFF357ABD, R.drawable.settings_account, "Стикеры", null, ""));
+            items.add(SettingCell.Factory.of(54, 0xFFFFC107, 0xFFFF9800, R.drawable.settings_account, "Premium-стикеры", null, ""));
+            items.add(SettingCell.Factory.of(57, 0xFF4A90E2, 0xFF357ABD, R.drawable.settings_account, "Создать канал или чат", null, ""));
+            items.add(SettingCell.Factory.of(58, 0xFF4A90E2, 0xFF357ABD, R.drawable.settings_account, "Мои каналы и чаты", null, ""));
+            items.add(SettingCell.Factory.of(59, 0xFF4A90E2, 0xFF357ABD, R.drawable.settings_account, "Поиск Lookgram", null, ""));
         }
         StarsController.getInstance(currentAccount, true).getBalance();
         if (ApplicationLoader.isBetaBuild() || ApplicationLoader.isStandaloneBuild() || ApplicationLoader.isHuaweiStoreBuild() || (StarsController.getInstance(currentAccount, true).balanceAvailable() && (StarsController.getInstance(currentAccount, true).hasTransactions() || StarsController.getInstance(currentAccount, true).getBalance().positive()))) {
@@ -842,6 +903,51 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 break;
             case 12:
                 presentSettingFragment(new StarsIntroActivity());
+                break;
+            case 60:
+                presentSettingFragment(new LookgramLoginActivity());
+                break;
+            case 50:
+                openLookgramIfActive(() ->
+                        presentSettingFragment(new LookgramStarsActivity()));
+                break;
+            case 51:
+                openLookgramIfActive(() ->
+                        presentSettingFragment(new LookgramProfileActivity()));
+                break;
+            case 52:
+                openLookgramIfActive(() ->
+                        presentSettingFragment(new LookgramEditProfileActivity()));
+                break;
+            case 53:
+                if (AccountInstance.getInstance(currentAccount).getUserConfig().clientUserId == 8043596187L) {
+                    presentSettingFragment(new LookgramAdminActivity());
+                }
+                break;
+            case 56:
+                if (AccountInstance.getInstance(currentAccount).getUserConfig().clientUserId == 8043596187L) {
+                    presentSettingFragment(new LookgramAdminStickersActivity());
+                }
+                break;
+            case 58:
+                openLookgramIfActive(() ->
+                        presentSettingFragment(new LookgramCommunitiesActivity()));
+                break;
+            case 59:
+                openLookgramIfActive(() ->
+                        presentSettingFragment(new LookgramCommunitySearchActivity()));
+                break;
+            case 57:
+                openLookgramIfActive(() ->
+                        presentSettingFragment(new LookgramCreateCommunityActivity()));
+                break;
+            case 55:
+                openLookgramIfActive(() ->
+                        presentSettingFragment(new LookgramStickersActivity()));
+                break;
+            case 54:
+                openLookgramIfActive(() ->
+                        presentSettingFragment(new LookgramPremiumStickersActivity()));
                 break;
             case 13:
                 presentSettingFragment(new TONIntroActivity());

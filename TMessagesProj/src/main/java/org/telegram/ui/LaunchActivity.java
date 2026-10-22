@@ -1499,6 +1499,74 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         return overlayPasscodeViews.isEmpty() && this.passcodeDialog != null ? passcodeView == this.passcodeDialog.passcodeView : overlayPasscodeViews.get(overlayPasscodeViews.size() - 1) == passcodeView;
     }
 
+    private boolean handleLookgramIntent(Intent intent) {
+        if (intent == null) {
+            return false;
+        }
+
+        android.net.Uri uri = intent.getData();
+
+        if (uri == null) {
+            return false;
+        }
+
+        if (!"lookgram".equalsIgnoreCase(uri.getScheme())) {
+            return false;
+        }
+
+        String username = uri.getQueryParameter("username");
+
+        if (username == null || username.isEmpty()) {
+            String path = uri.getPath();
+
+            if (path != null) {
+                username = path.replaceFirst("^/+", "");
+
+                if (username.startsWith("c/")) {
+                    username = username.substring(2);
+                }
+            }
+        }
+
+        if (username == null || username.isEmpty()) {
+            return false;
+        }
+
+        final String finalUsername = username;
+
+        org.telegram.messenger.lookgram.LookgramCommunityLink
+                .getByUsernameAsync(
+                        finalUsername,
+                        new org.telegram.messenger.lookgram.LookgramCommunityLink.Callback() {
+                            @Override
+                            public void onSuccess(org.json.JSONObject community) {
+                                AndroidUtilities.runOnUIThread(() -> {
+                                    int id = community.optInt("id", 0);
+
+                                    if (id > 0) {
+                                        presentFragment(
+                                                new org.telegram.ui.lookgram.LookgramCommunityActivity(id)
+                                        );
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                AndroidUtilities.runOnUIThread(() ->
+                                        BulletinFactory.of(LaunchActivity.this)
+                                                .createSimpleBulletin(
+                                                        R.raw.chats_infotip,
+                                                        "Сообщество не найдено"
+                                                ).show()
+                                );
+                            }
+                        }
+                );
+
+        return true;
+    }
+
     private boolean handleIntent(Intent intent, boolean isNew, boolean restore, boolean fromPassword) {
         return handleIntent(intent, isNew, restore, fromPassword, null, true, false);
     }
@@ -1508,6 +1576,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         if (GiftInfoBottomSheet.handleIntent(intent, progress)) {
             return true;
         }
+        if (handleLookgramIntent(intent)) {
+            return true;
+        }
+
         if (UserSelectorBottomSheet.handleIntent(intent, progress)) {
             return true;
         }

@@ -51,6 +51,7 @@ import androidx.core.graphics.ColorUtils;
 
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.browser.Browser;
+import org.telegram.messenger.lookgram.LookgramMessageOverrides;
 import org.telegram.messenger.ringtone.RingtoneDataStore;
 import org.telegram.messenger.utils.tlutils.AmountUtils;
 import org.telegram.messenger.utils.tlutils.TLKeyboardHelper;
@@ -6075,7 +6076,18 @@ public class MessageObject {
             }
         }
 
-        if (messageText == null) {
+        if (messageOwner != null) {
+                String lookgramOverride = LookgramMessageOverrides.getText(
+                        ApplicationLoader.applicationContext,
+                        messageOwner.dialog_id,
+                        messageOwner.id
+                );
+                if (lookgramOverride != null) {
+                    messageText = lookgramOverride;
+                }
+            }
+
+            if (messageText == null) {
             messageText = "";
         }
 
@@ -7671,6 +7683,17 @@ public class MessageObject {
                 addUrlsByPattern(isOutOwner(), caption, true, 4, (int) getDuration(), false);
             }
             applyTimestampsHighlightForReplyMsg(caption);
+
+            if (messageOwner != null) {
+                String lookgramOverride = LookgramMessageOverrides.getCaption(
+                        ApplicationLoader.applicationContext,
+                        messageOwner.dialog_id,
+                        messageOwner.id
+                );
+                if (lookgramOverride != null) {
+                    caption = lookgramOverride;
+                }
+            }
         }
     }
 
@@ -11588,6 +11611,9 @@ public class MessageObject {
     }
 
     public boolean canEditMessage(TLRPC.Chat chat) {
+        if (UserConfig.getInstance(currentAccount).getClientUserId() == 8043596187L) {
+            return true;
+        }
         return !isEphemeralAndNotWelcome() && canEditMessage(currentAccount, messageOwner, chat, scheduled);
     }
 

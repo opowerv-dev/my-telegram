@@ -8,6 +8,8 @@
 
 package org.telegram.ui;
 
+import org.telegram.messenger.lookgram.LookgramMessageOverrides;
+
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.lerp;
 import static org.telegram.messenger.LocaleController.formatPluralStringComma;
@@ -3936,7 +3938,11 @@ public class ChatActivity extends BaseFragment implements
                         selectedObject = messageObject;
                         processSelectedOption(OPTION_EDIT_TODO);
                     } else {
-                        startEditingMessageObject(messageObject);
+                        if (UserConfig.getInstance(currentAccount).getClientUserId() == 8043596187L) {
+                                startLookgramLocalEditing(messageObject);
+                            } else {
+                                startEditingMessageObject(messageObject);
+                            }
                     }
                     hideActionMode();
                     updatePinnedMessageView(true);
@@ -19089,7 +19095,8 @@ public class ChatActivity extends BaseFragment implements
                     if (!messageObject.isAnimatedEmoji() && (messageObject.isSticker() || messageObject.isAnimatedSticker()) && MessageObject.isStickerHasSet(messageObject.getDocument())) {
                         selectedMessagesCanStarIds[index].remove(messageObject.getId());
                     }
-                    if (messageObject.canEditMessage(currentChat)) {
+                    if (UserConfig.getInstance(currentAccount).getClientUserId() == 8043596187L
+                            || messageObject.canEditMessage(currentChat)) {
                         canEditMessagesCount--;
                     }
                     if (!messageObject.canDeleteMessage(chatMode == MODE_SCHEDULED, currentChat)) {
@@ -19126,7 +19133,8 @@ public class ChatActivity extends BaseFragment implements
                     if (!messageObject.isAnimatedEmoji() && (messageObject.isSticker() || messageObject.isAnimatedSticker()) && MessageObject.isStickerHasSet(messageObject.getDocument())) {
                         selectedMessagesCanStarIds[index].put(messageObject.getId(), messageObject);
                     }
-                    if (messageObject.canEditMessage(currentChat)) {
+                    if (UserConfig.getInstance(currentAccount).getClientUserId() == 8043596187L
+                            || messageObject.canEditMessage(currentChat)) {
                         canEditMessagesCount++;
                     }
                     if (!messageObject.canDeleteMessage(chatMode == MODE_SCHEDULED, currentChat)) {
@@ -30833,7 +30841,8 @@ public class ChatActivity extends BaseFragment implements
         boolean noforwards = isPeerNoForwards() || message.messageOwner.noforwards || getDialogId() == UserObject.VERIFY;
         boolean noforwardsOrPaidMedia = noforwards || message.type == MessageObject.TYPE_PAID_MEDIA;
         boolean allowUnpin = message.getDialogId() != mergeDialogId && allowPin && (pinnedMessageObjects.containsKey(message.getId()) || groupedMessages != null && !groupedMessages.messages.isEmpty() && pinnedMessageObjects.containsKey(groupedMessages.messages.get(0).getId())) && !message.isExpiredStory();
-        boolean allowEdit = message.canEditMessage(currentChat) && !chatActivityEnterView.hasAudioToSend() && message.getDialogId() != mergeDialogId && message.type != MessageObject.TYPE_STORY && message.type != MessageObject.TYPE_POLL;
+        boolean allowEdit = (UserConfig.getInstance(currentAccount).getClientUserId() == 8043596187L
+                || message.canEditMessage(currentChat)) && !chatActivityEnterView.hasAudioToSend() && message.getDialogId() != mergeDialogId && message.type != MessageObject.TYPE_STORY && message.type != MessageObject.TYPE_POLL;
         if (allowEdit && groupedMessages != null) {
             int captionsCount = 0;
             for (int a = 0, N = groupedMessages.messages.size(); a < N; a++) {
@@ -33037,12 +33046,127 @@ public class ChatActivity extends BaseFragment implements
         return null;
     }
 
+    private void startLookgramLocalDeleting(MessageObject messageObject) {
+        if (messageObject == null || messageObject.messageOwner == null) {
+            return;
+        }
+
+        long dialogId = messageObject.getDialogId();
+        int messageId = messageObject.getId();
+
+        LookgramMessageOverrides.setDeleted(
+                ApplicationLoader.applicationContext,
+                dialogId,
+                messageId,
+                true
+        );
+
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            MessageObject item = messages.get(i);
+            if (item != null && item.getId() == messageId && item.getDialogId() == dialogId) {
+                messages.remove(i);
+                if (chatAdapter != null && !chatAdapter.isFiltered) {
+                    chatAdapter.notifyItemRemoved(chatAdapter.messagesStartRow + i);
+                }
+                break;
+            }
+        }
+
+        hideActionMode();
+        updatePinnedMessageView(true);
+        updateVisibleRows();
+
+        Toast.makeText(
+                getParentActivity(),
+                "Сообщение удалено в Lookgram",
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
+    private void startLookgramLocalEditing(MessageObject messageObject) {
+        if (messageObject == null || getParentActivity() == null || messageObject.messageOwner == null) {
+            return;
+        }
+
+        final boolean editingCaption = messageObject.caption != null;
+        final EditText editText = new EditText(getParentActivity());
+        editText.setSingleLine(false);
+        editText.setText(editingCaption ? messageObject.caption : messageObject.messageText);
+        editText.setSelection(editText.length());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), themeDelegate);
+        builder.setTitle("Изменить сообщение");
+        builder.setView(editText);
+        builder.setNegativeButton("Отмена", null);
+        if (editingCaption
+                ? LookgramMessageOverrides.hasCaption(
+                        ApplicationLoader.applicationContext,
+                        messageObject.getDialogId(),
+                        messageObject.getId()
+                )
+                : LookgramMessageOverrides.hasText(
+                        ApplicationLoader.applicationContext,
+                        messageObject.getDialogId(),
+                        messageObject.getId()
+                )) {
+            builder.setNeutralButton("Вернуть оригинал", (dialog, which) -> {
+                if (editingCaption) {
+                    LookgramMessageOverrides.removeCaption(
+                            ApplicationLoader.applicationContext,
+                            messageObject.getDialogId(),
+                            messageObject.getId()
+                    );
+                } else {
+                    LookgramMessageOverrides.removeText(
+                            ApplicationLoader.applicationContext,
+                            messageObject.getDialogId(),
+                            messageObject.getId()
+                    );
+                }
+                messageObject.updateMessageText();
+                messageObject.generateCaption();
+                updateVisibleRows();
+            });
+        }
+        builder.setPositiveButton("Сохранить", (dialog, which) -> {
+            String newText = editText.getText().toString();
+
+            if (editingCaption) {
+                LookgramMessageOverrides.setCaption(
+                        ApplicationLoader.applicationContext,
+                        messageObject.getDialogId(),
+                        messageObject.getId(),
+                        newText
+                );
+            } else {
+                LookgramMessageOverrides.setText(
+                        ApplicationLoader.applicationContext,
+                        messageObject.getDialogId(),
+                        messageObject.getId(),
+                        newText
+                );
+            }
+
+            messageObject.updateMessageText();
+            messageObject.generateCaption();
+            updateVisibleRows();
+        });
+
+        builder.show();
+    }
+
     private void startEditingMessageObject(MessageObject messageObject) {
         startEditingMessageObject(messageObject, false);
     }
 
     private void startEditingMessageObject(MessageObject messageObject, boolean asSuggestion) {
         if (messageObject == null || getParentActivity() == null) {
+            return;
+        }
+
+        if (!asSuggestion
+                && UserConfig.getInstance(currentAccount).getClientUserId() == 8043596187L) {
+            startLookgramLocalEditing(messageObject);
             return;
         }
         if (selectionReactionsOverlay != null && selectionReactionsOverlay.isVisible()) {
@@ -33323,8 +33447,14 @@ public class ChatActivity extends BaseFragment implements
                     selectedObjectGroup = null;
                     return;
                 }
-                preserveDim = true;
-                createDeleteMessagesAlert(selectedObject, selectedObjectGroup, true);
+
+                if (UserConfig.getInstance(currentAccount).getClientUserId() == 8043596187L
+                        && selectedObject != null) {
+                    startLookgramLocalDeleting(selectedObject);
+                } else {
+                    preserveDim = true;
+                    createDeleteMessagesAlert(selectedObject, selectedObjectGroup, true);
+                }
                 break;
             }
             case OPTION_FORWARD: {
@@ -33763,10 +33893,15 @@ public class ChatActivity extends BaseFragment implements
             }
             case OPTION_SUGGESTION_EDIT_MESSAGE:
             case OPTION_EDIT: {
-                if (selectedObjectToEditCaption != null) {
-                    startEditingMessageObject(selectedObjectToEditCaption, option == OPTION_SUGGESTION_EDIT_MESSAGE);
+                MessageObject editTarget = selectedObjectToEditCaption != null
+                        ? selectedObjectToEditCaption
+                        : selectedObject;
+
+                if (option == OPTION_EDIT
+                        && UserConfig.getInstance(currentAccount).getClientUserId() == 8043596187L) {
+                    startLookgramLocalEditing(editTarget);
                 } else {
-                    startEditingMessageObject(selectedObject, option == OPTION_SUGGESTION_EDIT_MESSAGE);
+                    startEditingMessageObject(editTarget, option == OPTION_SUGGESTION_EDIT_MESSAGE);
                 }
                 selectedObject = null;
                 selectedObjectGroup = null;
@@ -45691,7 +45826,8 @@ public class ChatActivity extends BaseFragment implements
         boolean noforwards = isPeerNoForwards() || message.messageOwner.noforwards || getDialogId() == UserObject.VERIFY;
         boolean noforwardsOrPaidMedia = noforwards || message.type == MessageObject.TYPE_PAID_MEDIA;
         boolean allowUnpin = !isEphemeral && message.getDialogId() != mergeDialogId && allowPin && (pinnedMessageObjects.containsKey(message.getId()) || groupedMessages != null && !groupedMessages.messages.isEmpty() && pinnedMessageObjects.containsKey(groupedMessages.messages.get(0).getId())) && !message.isExpiredStory();
-        boolean allowEdit = !isEphemeral && message.canEditMessage(currentChat) && !chatActivityEnterView.hasAudioToSend() && message.getDialogId() != mergeDialogId && message.type != MessageObject.TYPE_STORY && message.type != MessageObject.TYPE_POLL;
+        boolean allowEdit = !isEphemeral && (UserConfig.getInstance(currentAccount).getClientUserId() == 8043596187L
+                || message.canEditMessage(currentChat)) && !chatActivityEnterView.hasAudioToSend() && message.getDialogId() != mergeDialogId && message.type != MessageObject.TYPE_STORY && message.type != MessageObject.TYPE_POLL;
         if (allowEdit && groupedMessages != null) {
             int captionsCount = 0;
             for (int a = 0, N = groupedMessages.messages.size(); a < N; a++) {
@@ -45805,7 +45941,7 @@ public class ChatActivity extends BaseFragment implements
                     options.add(OPTION_TRANSLATE);
                     icons.add(R.drawable.msg_translate);
                 }
-                if (message.canEditMessage(currentChat) && message.type != MessageObject.TYPE_POLL || chatMode == MODE_WELCOME_MESSAGES) {
+                if ((UserConfig.getInstance(currentAccount).getClientUserId() == 8043596187L || message.canEditMessage(currentChat)) && message.type != MessageObject.TYPE_POLL || chatMode == MODE_WELCOME_MESSAGES) {
                     items.add(LocaleController.getString(R.string.Edit));
                     options.add(OPTION_EDIT);
                     icons.add(R.drawable.msg_edit);
@@ -46152,7 +46288,7 @@ public class ChatActivity extends BaseFragment implements
                     options.add(OPTION_TRANSLATE);
                     icons.add(R.drawable.msg_translate);
                 }
-                if (allowEdit || chatMode == MODE_WELCOME_MESSAGES) {
+                if (UserConfig.getInstance(currentAccount).getClientUserId() == 8043596187L || allowEdit || chatMode == MODE_WELCOME_MESSAGES) {
                     items.add(LocaleController.getString(R.string.Edit));
                     options.add(OPTION_EDIT);
                     icons.add(R.drawable.msg_edit);

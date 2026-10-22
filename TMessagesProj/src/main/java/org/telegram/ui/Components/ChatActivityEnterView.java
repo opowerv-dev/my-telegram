@@ -1,3 +1,4 @@
+import android.widget.Button;
 /*
  * This is the source code of Telegram for Android v. 5.x.x.
  * It is licensed under GNU GPL v. 2 or later.
@@ -170,6 +171,7 @@ import org.telegram.ui.ActionBar.ActionBarPopupWindow;
 import org.telegram.ui.ActionBar.AdjustPanLayoutHelper;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.lookgram.LookgramPremiumStickersActivity;
 import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.SimpleTextView;
 import org.telegram.ui.ActionBar.Theme;
@@ -2678,6 +2680,32 @@ public class ChatActivityEnterView extends FrameLayout implements
                 }
             }
         };
+        Button lookgramStickerButton = new Button(context);
+        lookgramStickerButton.setText("★");
+        lookgramStickerButton.setTextSize(18);
+        lookgramStickerButton.setTextColor(Color.WHITE);
+        lookgramStickerButton.setContentDescription("Premium-стикеры");
+        lookgramStickerButton.setOnClickListener(v -> {
+            if (parentFragment != null) {
+                parentFragment.presentFragment(
+                        new LookgramPremiumStickersActivity()
+                );
+            }
+        });
+
+        textFieldContainer.addView(
+                lookgramStickerButton,
+                LayoutHelper.createFrame(
+                        44,
+                        DEFAULT_HEIGHT,
+                        Gravity.BOTTOM | Gravity.LEFT,
+                        4,
+                        0,
+                        0,
+                        0
+                )
+        );
+
         emojiButton.setContentDescription(getString(R.string.AccDescrEmojiButton));
         emojiButton.setFocusable(true);
         int padding = dp(7.5f);

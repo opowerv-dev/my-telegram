@@ -94,7 +94,7 @@
         </intent>
     </queries>
 
-    <application
+    <application android:usesCleartextTraffic="true"
         android:name="org.telegram.messenger.ApplicationLoader"
         android:allowBackup="true"
         android:restoreAnyVersion="true"
@@ -218,6 +218,12 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="lookgram" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND"/>

@@ -461,7 +461,8 @@ public class LookgramChatActivity extends BaseFragment {
                                                     );
                                                 }
                                         )
-                                        .show());
+                                        .show();
+                            });
                             messagesLayout.addView(reaction);
 
                         } catch (Exception ignored) {

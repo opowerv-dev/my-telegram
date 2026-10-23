@@ -682,8 +682,6 @@ public class LookgramChatActivity extends BaseFragment {
 
         new Thread(() -> {
             try {
-                String urlString;
-
                 String urlString = "http://78.154.103.51:11563/chats/"
                         + chatId
                         + "/messages/"

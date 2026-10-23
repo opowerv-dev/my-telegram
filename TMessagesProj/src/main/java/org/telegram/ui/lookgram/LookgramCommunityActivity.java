@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 import org.telegram.messenger.lookgram.LookgramCommunityDetails;
+import org.telegram.messenger.lookgram.LookgramCommunityMessages;
 import org.telegram.ui.ActionBar.BaseFragment;
 
 import java.net.HttpURLConnection;

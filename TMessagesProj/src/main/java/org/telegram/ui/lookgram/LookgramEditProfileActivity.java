@@ -148,7 +148,8 @@ public class LookgramEditProfileActivity extends BaseFragment {
                 .getUserConfig()
                 .clientUserId;
 
-        LookgramProfile.getOrCreateAsync(telegramUserId, profile -> {
+        LookgramProfile.getOrCreateAsync(telegramUserId, new LookgramProfile.Callback() {
+            @Override public void onResult(LookgramProfile profile) {
             if (getParentActivity() == null) return;
             getParentActivity().runOnUiThread(() -> {
                 username.setText(profile.username);
@@ -170,9 +171,13 @@ public class LookgramEditProfileActivity extends BaseFragment {
                 }
 
             });
+
+            }
+            @Override public void onError(Exception e) {}
         });
         save.setOnClickListener(v -> {
-            LookgramProfile.getOrCreateAsync(telegramUserId, profile -> {
+            LookgramProfile.getOrCreateAsync(telegramUserId, new LookgramProfile.Callback() {
+            @Override public void onResult(LookgramProfile profile) {
                 String avatarBase64 = getAvatarBase64();
                 LookgramProfile.updateAsync(
                         telegramUserId,
@@ -208,7 +213,10 @@ public class LookgramEditProfileActivity extends BaseFragment {
                             }
                         }
                 );
-            });
+
+            }
+            @Override public void onError(Exception e) {}
+        });
         });
         return fragmentView = layout;
     }

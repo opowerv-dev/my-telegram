@@ -20,13 +20,13 @@ import org.telegram.ui.ActionBar.BaseFragment;
 
 public class LookgramChatActivity extends BaseFragment {
 
-    private final int chatId;
+    private final long chatId;
     private LinearLayout messagesLayout;
     private android.os.Handler chatHandler;
     private Runnable chatUpdater;
     private int replyToMessageId = 0;
 
-    public LookgramChatActivity(int chatId) {
+    public LookgramChatActivity(long chatId) {
         this.chatId = chatId;
     }
 

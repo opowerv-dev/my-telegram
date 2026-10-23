@@ -1554,11 +1554,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                             @Override
                             public void onError(Exception e) {
                                 AndroidUtilities.runOnUIThread(() ->
-                                        BulletinFactory.of(LaunchActivity.this)
-                                                .createSimpleBulletin(
-                                                        R.raw.chats_infotip,
-                                                        "Сообщество не найдено"
-                                                ).show()
+                                        android.widget.Toast.makeText(
+                                                LaunchActivity.this,
+                                                "Сообщество не найдено",
+                                                android.widget.Toast.LENGTH_SHORT
+                                        ).show()
                                 );
                             }
                         }

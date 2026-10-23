@@ -313,13 +313,6 @@ public class LookgramChatsActivity extends BaseFragment {
                             );
 
                             try {
-                                JSONObject otherUser =
-                                        chat.optJSONObject("otherUser");
-                                JSONObject profile =
-                                        otherUser != null
-                                                ? otherUser.optJSONObject("profile")
-                                                : null;
-
                                 String avatarData =
                                         profile != null
                                                 ? profile.optString("avatar", "")

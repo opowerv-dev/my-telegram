@@ -16,6 +16,7 @@ import org.telegram.messenger.lookgram.LookgramAuthSession;
 import org.telegram.ui.ActionBar.BaseFragment;
 
 public class LookgramProfileActivity extends BaseFragment {
+    private android.widget.ImageView avatarView;
 
     private final long profileTelegramUserId;
 
@@ -231,8 +232,7 @@ public class LookgramProfileActivity extends BaseFragment {
         LinearLayout layout = new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
 
-        android.widget.ImageView avatarView =
-                new android.widget.ImageView(context);
+        avatarView = new android.widget.ImageView(context);
         avatarView.setLayoutParams(
                 new LinearLayout.LayoutParams(180, 180)
         );

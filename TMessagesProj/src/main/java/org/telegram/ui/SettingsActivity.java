@@ -1,5 +1,7 @@
 package org.telegram.ui;
 
+import org.telegram.messenger.AccountInstance;
+
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.lerp;
 import static org.telegram.messenger.AndroidUtilities.replaceSingleTag;

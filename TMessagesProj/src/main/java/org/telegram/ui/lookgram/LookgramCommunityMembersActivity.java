@@ -152,9 +152,9 @@ public class LookgramCommunityMembersActivity extends BaseFragment {
                                                             community.optJSONArray("admins");
 
                                                     if (!canModerate && admins != null) {
-                                                        for (int i = 0; i < admins.length(); i++) {
+                                                        for (int adminIndex = 0; adminIndex < admins.length(); adminIndex++) {
                                                             org.json.JSONObject admin =
-                                                                    admins.optJSONObject(i);
+                                                                    admins.optJSONObject(adminIndex);
 
                                                             if (admin == null) {
                                                                 continue;

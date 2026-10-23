@@ -33076,10 +33076,10 @@ public class ChatActivity extends BaseFragment implements
         updatePinnedMessageView(true);
         updateVisibleRows();
 
-        Toast.makeText(
+        android.widget.Toast.makeText(
                 getParentActivity(),
                 "Сообщение удалено в Lookgram",
-                Toast.LENGTH_SHORT
+                android.widget.Toast.LENGTH_SHORT
         ).show();
     }
 

@@ -12,9 +12,13 @@ import org.json.JSONObject;
 import org.telegram.messenger.lookgram.LookgramCommunityDetails;
 import org.telegram.ui.ActionBar.BaseFragment;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 public class LookgramCommunityActivity extends BaseFragment {
 
     private int communityId;
+    private LinearLayout messagesLayout;
 
     public LookgramCommunityActivity(int communityId) {
         this.communityId = communityId;
@@ -286,7 +290,7 @@ public class LookgramCommunityActivity extends BaseFragment {
                         }
                 );
 
-        LinearLayout messagesLayout = new LinearLayout(context);
+        messagesLayout = new LinearLayout(context);
         messagesLayout.setOrientation(LinearLayout.VERTICAL);
 
         LinearLayout messageBar = new LinearLayout(context);

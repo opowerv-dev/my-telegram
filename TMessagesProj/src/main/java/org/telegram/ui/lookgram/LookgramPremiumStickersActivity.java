@@ -47,7 +47,9 @@ public class LookgramPremiumStickersActivity extends BaseFragment {
         list.addView(loading);
 
         LookgramPremiumStickers.getAsync(
-                stickers -> {
+                new LookgramPremiumStickers.Callback() {
+                    @Override
+                    public void onResult(java.util.List<LookgramPremiumStickers.Sticker> stickers) {
                     if (getParentActivity() == null) {
                         return;
                     }
@@ -165,6 +167,20 @@ public class LookgramPremiumStickersActivity extends BaseFragment {
                             list.addView(row);
                         }
                     });
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        if (getParentActivity() != null) {
+                            getParentActivity().runOnUiThread(() -> {
+                                list.removeView(loading);
+                                TextView error = new TextView(context);
+                                error.setText("Не удалось загрузить стикеры");
+                                error.setTextColor(Color.LTGRAY);
+                                list.addView(error);
+                            });
+                        }
+                    }
                 }
         );
 

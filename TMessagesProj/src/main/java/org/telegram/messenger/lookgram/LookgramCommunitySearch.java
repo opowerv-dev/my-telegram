@@ -6,6 +6,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class LookgramCommunitySearch {
 
@@ -16,27 +18,37 @@ public class LookgramCommunitySearch {
         void onError(Exception e);
     }
 
-    public static void searchAsync(
-            String username,
-            Callback callback
-    ) {
-        new Thread(() -> {
-            try {
-                username = username.trim();
+    public static void searchAsync(String username, Callback callback) {
+        String cleaned = username == null ? "" : username.trim();
 
-                if (username.startsWith("@")) {
-                    username = username.substring(1);
+        if (cleaned.startsWith("@")) {
+            cleaned = cleaned.substring(1);
+        }
+
+        final String searchUsername = cleaned;
+
+        new Thread(() -> {
+            HttpURLConnection connection = null;
+
+            try {
+                if (searchUsername.isEmpty()) {
+                    throw new IllegalArgumentException(
+                            "Username cannot be empty"
+                    );
                 }
 
-                URL url = new URL(
-                        SERVER + "/communities/by-username/" +
-                        java.net.URLEncoder.encode(username, "UTF-8")
+                String encoded = URLEncoder.encode(
+                        searchUsername, StandardCharsets.UTF_8.name()
                 );
 
-                HttpURLConnection connection =
-                        (HttpURLConnection) url.openConnection();
+                URL url = new URL(
+                        SERVER + "/communities/by-username/" + encoded
+                );
 
+                connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(10000);
 
                 int code = connection.getResponseCode();
 
@@ -44,28 +56,27 @@ public class LookgramCommunitySearch {
                     throw new Exception("HTTP " + code);
                 }
 
-                BufferedReader reader =
-                        new BufferedReader(
-                                new InputStreamReader(
-                                        connection.getInputStream()
-                                )
-                        );
-
                 StringBuilder result = new StringBuilder();
-                String line;
 
-                while ((line = reader.readLine()) != null) {
-                    result.append(line);
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(
+                                connection.getInputStream(),
+                                StandardCharsets.UTF_8
+                        ))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        result.append(line);
+                    }
                 }
 
-                reader.close();
-
-                callback.onSuccess(
-                        new JSONObject(result.toString())
-                );
+                callback.onSuccess(new JSONObject(result.toString()));
 
             } catch (Exception e) {
                 callback.onError(e);
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
             }
         }).start();
     }
